@@ -2,7 +2,7 @@ import os
 import config 
 
 # Function to get model paths based on rock type and model type
-def get_models_paths(rock_type_id, model_type, log_columns):
+def get_model_paths(rock_type_id, model_type, log_columns):
     # Validate inputs: Check rock_type and model_type
     if not config.is_valid_rock_type(rock_type_id):
         raise ValueError(f"Invalid rock type ID: {rock_type_id}. Must be 1, 2, or 3.")
