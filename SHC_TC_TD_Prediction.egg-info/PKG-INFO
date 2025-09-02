@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: SHC-TC-TD-Prediction
+Version: 1.1.0
+Home-page: https://github.com/Esfahani98/SHC-TC-TD-Prediction.git
+Author: Hamid Reza Mousavi
+License: IUST
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scikit-learn
+Dynamic: author
+Dynamic: home-page
+Dynamic: license
+Dynamic: requires-dist

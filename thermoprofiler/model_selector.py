@@ -1,34 +1,23 @@
-import os 
-import config 
+import numpy as np
+import pandas as pd
+from . import config
 
-# Function to get model paths based on rock type and model type
-def get_model_paths(rock_type_id, model_type, log_columns):
-    # Validate inputs: Check rock_type and model_type
-    if not config.is_valid_rock_type(rock_type_id):
-        raise ValueError(f"Invalid rock type ID: {rock_type_id}. Must be 1, 2, or 3.")
-    
-    model_type = model_type.upper() if model_type else config.DEFAULT_MODEL_TYPE
-    if model_type not in config.VALID_MODEL_TYPES:
-        raise ValueError(f"Invalid model type: {model_type}. Must be one of {config.VALID_MODEL_TYPES}.")
-    
-    model_number = config.get_model_number(log_columns)
-    if model_number is None:
-        raise ValueError(f"Invalid log columns: {log_columns}. Must be a combination of {list(config.VALID_LOG_COLUMNS)}.")
-    
-    rock_type = config.ROCK_TYPE_MAPPING[rock_type_id]
-    filename = config.generate_model_filename(model_number)
 
-    paths = {}
-    for property in config.OUTPUT_PROPERTIES:
-        path = config.MODEL_PATH_TEMPLATE.format(
-            base_path=config.MODEL_BASE_PATH,
-            rock_type=rock_type,
-            model_type=model_type,
-            property=property,
-            filename=filename
-        )
-        if not os.path.exists(path):
-            raise FileNotFoundError(f"Model not found: {path}")
-        paths[property] = path
-    
-    return paths
+def row_model_number(row):
+    """Assign model number to a single row based on available logs."""
+    available = [c for c in config.VALID_LOG_COLUMNS if c in row.index and pd.notna(row[c])]
+    for num, combo in config.LOG_COMBINATIONS.items():
+        if available == combo:
+            return num
+    return np.nan
+
+def assign_model_numbers(df):
+    """
+    Assigns model_number column to the DataFrame.
+    Drops rows without valid model_number.
+    """
+    df = df.copy()
+    df["model_number"] = df.apply(row_model_number, axis=1)
+    df = df.dropna(subset=["model_number"]).copy()
+    df["model_number"] = df["model_number"].astype(int)
+    return df

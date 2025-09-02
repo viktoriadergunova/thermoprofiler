@@ -1,10 +1,18 @@
 # Configuration for ThermoProfiler package
 # Defines rock type mappings, log combinations, model types, and model file paths
+import os
 
 ROCK_TYPE_MAPPING = {1: "EVAPORITES", 2: "CARBONATES", 3: "CLASTICS"}
 REVERSE_ROCK_TYPE_MAPPING = {"EVAPORITES": 1, "CARBONATES": 2, "CLASTICS": 3}
 
 VALID_LOG_COLUMNS = {"RHOB", "PHIN", "VSH", "VP"}
+
+MODEL_TYPE_FOLDER_NAMES = {
+    "XGBOOST": "XGBoost",
+    "ADABOOST": "AdaBoost",
+    "RF": "RF",
+    "LINEAR": "Linear"
+}
 
 VALID_MODEL_TYPES = ["ADABOOST", "LINEAR", "RF", "XGBBOOST"]
 DEFAULT_MODEL_TYPE = "XGBBOOST"
@@ -27,7 +35,8 @@ LOG_COMBINATIONS = {
     15: ["RHOB", "PHIN", "VSH", "VP"]
 }
 
-MODEL_BASE_PATH = "compiled_models"
+PACKAGE_ROOT = os.path.dirname(os.path.abspath(__file__))
+MODEL_BASE_PATH = os.path.abspath(os.path.join(PACKAGE_ROOT, "..", "compiled_models"))
 MODEL_PATH_TEMPLATE = "{base_path}/{rock_type}/{model_type}/{property}/{filename}"
 
 OUTPUT_PROPERTIES = ["TC", "SHC", "TD"]
