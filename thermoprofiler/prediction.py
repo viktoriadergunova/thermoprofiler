@@ -1,11 +1,13 @@
 import pandas as pd
 import joblib
-from . import config
 import os
 
+from . import config
+from .model_selector import row_model_number
+
 def load_model(rock_type_id, model_type, property, model_number):
-    rock_type = config.ROCK_TYPE_MAPPING[rock_type_id].capitalize()  # "CLASTICS" → "Clastics"
-    
+    rock_type = config.ROCK_TYPE_MAPPING[rock_type_id].capitalize()  # e.g., "CLASTICS" → "Clastics"
+
     try:
         model_type_folder = config.MODEL_TYPE_FOLDER_NAMES[model_type.upper()]
     except KeyError:
@@ -19,38 +21,44 @@ def load_model(rock_type_id, model_type, property, model_number):
         property=property,
         filename=filename
     )
-    print("Trying to load model at path:", path)
-    print("Exists:", os.path.exists(path))
-    print("Full path:", os.path.abspath(path))
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Model file not found at: {path}")
 
     return joblib.load(path)
 
 
 def predict_all_properties(df, model_type="XGBOOST"):
-    """
-    Predict TC, SHC, and TD for each row in the dataframe based on its model_number and Rock_type.
-    """
     df = df.copy()
-
-    # Clean Rock_type column to ensure it's numeric
     df["Rock_type"] = pd.to_numeric(df["Rock_type"], errors="coerce").astype("Int64")
 
-    predictions = {
-        "TC": pd.Series(index=df.index, dtype=float),
-        "SHC": pd.Series(index=df.index, dtype=float),
-        "TD": pd.Series(index=df.index, dtype=float),
-    }
+    # Step 1: Determine the best model number per property
+    for prop in config.OUTPUT_PROPERTIES:
+        df[f"model_number_{prop}"] = df.apply(
+            lambda row: row_model_number(row, model_type=model_type, prop=prop),
+            axis=1
+        )
 
-    for (rock_type_id, model_number), group in df.groupby(["Rock_type", "model_number"]):
-        log_cols = config.LOG_COMBINATIONS[model_number]
-        X = group[log_cols]
+    # Step 2: Initialize predictions
+    predictions = {prop: pd.Series(index=df.index, dtype=float) for prop in config.OUTPUT_PROPERTIES}
 
-        for prop in ["TC", "SHC", "TD"]:
-            model = load_model(rock_type_id, model_type, prop, model_number)
-            y_pred = model.predict(X)
-            predictions[prop].loc[group.index] = y_pred
+    # Step 3: Predict per property using grouped model numbers
+    for prop in config.OUTPUT_PROPERTIES:
+        for (rock_type_id, model_number), group in df.groupby(["Rock_type", f"model_number_{prop}"]):
+            if pd.isna(model_number) or pd.isna(rock_type_id):
+                continue
 
-    for prop in predictions:
+            try:
+                log_cols = config.LOG_COMBINATIONS[model_number]
+                X = group[log_cols]
+
+                model = load_model(rock_type_id, model_type, prop, model_number)
+                y_pred = model.predict(X)
+
+                predictions[prop].loc[group.index] = y_pred
+            except Exception as e:
+                print(f"Error predicting {prop} for model {model_number}, rock_type {rock_type_id}: {e}")
+
         df[prop] = predictions[prop]
 
     return df
