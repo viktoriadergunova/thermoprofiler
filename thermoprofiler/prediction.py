@@ -3,8 +3,9 @@ import joblib
 import os
 
 from . import config
-from .model_selector import row_model_number
+from .model_selector import row_model_number_with_mape
 
+# Load a trained model from disk
 def load_model(rock_type_id, model_type, property, model_number):
     rock_type = config.ROCK_TYPE_MAPPING[rock_type_id].capitalize()  # e.g., "CLASTICS" → "Clastics"
 
@@ -28,29 +29,44 @@ def load_model(rock_type_id, model_type, property, model_number):
     return joblib.load(path)
 
 
+# Predict all thermal properties (TC, SHC, TD) for the input DataFrame
 def predict_all_properties(df, model_type="XGBOOST"):
     df = df.copy()
     df["Rock_type"] = pd.to_numeric(df["Rock_type"], errors="coerce").astype("Int64")
 
-    # Step 1: Determine the best model number per property
+    # Step 1: Select best model and MAPE for each property
     for prop in config.OUTPUT_PROPERTIES:
-        df[f"model_number_{prop}"] = df.apply(
-            lambda row: row_model_number(row, model_type=model_type, prop=prop),
-            axis=1
+        results = df.apply(
+            lambda row: row_model_number_with_mape(row, model_type=model_type, prop=prop),
+            axis=1,
+            result_type="expand"
         )
+        df[f"model_number_{prop}"] = results[0]
+        df[f"mape_{prop}"] = results[1]
 
-    # Step 2: Initialize predictions
+    # Step 2: Initialize empty prediction columns
     predictions = {prop: pd.Series(index=df.index, dtype=float) for prop in config.OUTPUT_PROPERTIES}
 
     # Step 3: Predict per property using grouped model numbers
     for prop in config.OUTPUT_PROPERTIES:
-        for (rock_type_id, model_number), group in df.groupby(["Rock_type", f"model_number_{prop}"]):
+        model_col = f"model_number_{prop}"
+        for (rock_type_id, model_number), group in df.groupby(["Rock_type", model_col]):
             if pd.isna(model_number) or pd.isna(rock_type_id):
                 continue
 
             try:
+                model_number = int(model_number)
                 log_cols = config.LOG_COMBINATIONS[model_number]
+
+                # Ensure all required logs are present in the group
+                missing_logs = [col for col in log_cols if col not in group.columns]
+                if missing_logs:
+                    print(f"Skipping model {model_number} for {prop}: missing logs {missing_logs}")
+                    continue
+
                 X = group[log_cols]
+                if X.isnull().any(axis=1).all():
+                    continue  # Skip if all inputs are NaN
 
                 model = load_model(rock_type_id, model_type, prop, model_number)
                 y_pred = model.predict(X)
