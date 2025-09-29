@@ -1,82 +1,121 @@
-<h1>
-  Thermal-property profiles from well-logs in sedimentary rocks: a physically informed Machine-Learning based prediction tool (<code>ThermoProfiler</code>)
-  <a href="https://doi.org/10.1093/gji/ggaf260" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/badge/DOI-10.1093%2Fgji%2Fggaf260-blue" alt="DOI">
-  </a>
-</h1>
-
-## Overview
-
-Predicting thermal properties such as thermal conductivity, specific heat capacity, and thermal diffusivity is crucial for understanding heat flow in subsurface environments, particularly in sedimentary rock formations. These properties are essential for applications in geothermal energy, hydrocarbon exploration, and underground storage systems. Accurate predictions of thermal properties from well-log data enhance the ability to model subsurface temperature distributions, which are vital for assessing the viability of geothermal resources and optimizing drilling operations. The ThermoProfiler, a machine learning-based prediction tool, leverages well-logs to generate precise thermal-property profiles. By integrating physical principles with advanced machine learning techniques, ThermoProfiler provides a reliable and efficient method to estimate these critical thermal properties, ultimately aiding in the effective management and utilization of subsurface energy resources.
-
-## Guide
-1- Create virtual environment (⚠️ python 3.9.12): <br />
-```
-python -m venv thermal-venv
-```
-```
-thermal-venv\Scripts\activate
-```
-2- Install below versions library: <br />
-```
-pip install pandas
-```
-```
-pip install numpy
-```
-```
-pip install joblib==1.2.0
-```
-```
-pip install matplotlib==3.8.1
-```
-```
-pip install scikit-learn==1.2.1
-```
-```
-pip install xgboost==1.6.1
-```
-3- Add venv to ipykernel (if use jupyter notebook) <br />
-```
-pip install ipykernel
-```
-```
-python -m ipykernel install --user --name=thermal-venv
-```
-### Examples
-Find multiple examples under:
-[https://github.com/Hamid-Reza-Mousavi/SHC-TC-TD-Prediction-using-petrophysical-well-logs/tree/main/notebook
-](https://github.com/Hamid-Reza-Mousavi/SHC-TC-TD-Prediction-using-petrophysical-well-logs/tree/main/notebook
-)
-
-<p align="center">
-  <img width="800" src="https://github.com/Hamid-Reza-Mousavi/SHC-TC-TD-Prediction-using-petrophysical-well-logs/blob/main/img/fig-guide1.jpg" />
-</p>
-
-${\color{red} 1-Log}$   <br />
-1-  ['RHOB'] <br />
-2-  ['PHIN'] <br />
-3-  ['VSH']<br />
-4-  ['Vp'] <br />
-<br />
-${\color{red} 2-Log}$	 <br />
-5-  ['RHOB', 'PHIN'] <br />
-6-  ['RHOB', 'VSH'] <br />
-7-  ['RHOB', 'Vp'] <br />
-8-  ['PHIN', 'VSH'] <br />
-9-  ['PHIN', 'Vp'] <br />
-10- ['VSH', 'Vp'] <br />
-<br />
-${\color{red} 3-Log}$	 <br />
-11- ['RHOB', 'PHIN', 'VSH'] <br />
-12- ['RHOB', 'PHIN', 'Vp'] <br />
-13- ['RHOB', 'VSH', 'Vp'] <br />
-14- ['PHIN', 'VSH', 'Vp'] <br />
-<br />
-${\color{red} 4-Log}$	 <br />
-15- ['RHOB', 'PHIN', 'VSH', 'Vp'] <br />
-
-## Acknowledgments
-This research was partially supported by Iran University of Science & Technology (IUST) and by the German project ThermoBase (BGE).
 
 
+# ThermoProfiler
+
+ThermoProfiler is a Python package for predicting **thermal rock properties** from well logs using machine learning models.  
+It supports multiple model types (`XGBOOST`, `ADABOOST`, `RF`, `LINEAR`)
+## Features
+- Predicts:
+  - Thermal Conductivity (`TC`)  
+  - Specific Heat Capacity (`SHC`)  
+  - Thermal Diffusivity (`TD`)  
+- Dual prediction strategy:
+  - **MAPE-optimal** → best available log combination (lowest uncertainty).  
+  - **Raw logs** → exactly matches the available logs.  
+- Provides **uncertainty estimates** (MAPE %) for each prediction.  
+
+
+---
+
+## Installation
+Clone and install dependencies:
+
+```bash
+git clone https://github.com/yourusername/thermoprofiler.git
+cd thermoprofiler
+pip install -r requirements.txt
+```
+
+Requirements:
+- `numpy==1.25.2`  
+- `pandas>=1.5.3`  
+- `scikit-learn==1.2.1`  
+- `joblib>=1.2.0`  
+
+---
+
+## Usage Example
+
+```python
+import pandas as pd
+from thermoprofiler.preprocessing import clean_log_dataframe
+from thermoprofiler.prediction import predict_all_properties
+
+# Load your well log dataset
+df = pd.read_csv("input_logs.csv")
+
+# Preprocess (standardize column names, clean missing values)
+df = clean_log_dataframe(df)
+
+# Run predictions
+results = predict_all_properties(df, model_type="XGBOOST")
+
+print(results.head())
+```
+
+---
+
+## Output Columns
+
+The returned `DataFrame` contains the following new columns for each property (`TC`, `SHC`, `TD`):
+
+- `model_number_{prop}` → MAPE-optimal model number used.  
+- `uncertainty_{prop}` → Uncertainty (MAPE %) for the optimal model.  
+- `model_number_raw_{prop}` → Model number reflecting the actual available logs.  
+- `{prop}_prediction` → Prediction using the MAPE-optimal model.  
+- `{prop}_prediction_raw` → Prediction using the raw-log model.  
+
+---
+
+## Example Output (abbreviated)
+
+| Depth | Rock_type | model_number_TC | uncertainty_TC | model_number_raw_TC | TC_prediction | TC_prediction_raw |
+|-------|-----------|-----------------|----------------|----------------------|---------------|-------------------|
+| 1000  | 3 (Clastics) | 15 | 7.7 | 11 | 2.15 | 2.05 |
+| 1005  | 2 (Carbonates) | 12 | 5.3 | 5 | 2.42 | 2.38 |
+
+---
+
+## Input Requirements
+- **Logs accepted**: `RHOB`, `PHIN`, `VSH`, `VP`.  
+- Rock type column required:  
+  - `1` = Evaporites  
+  - `2` = Carbonates  
+  - `3` = Clastics  
+- Missing logs handled automatically → falls back to the available combination.  
+
+---
+
+## Model Files
+- Models are stored in `compiled_models/{ROCK_TYPE}/{MODEL_TYPE}/{PROPERTY}/`.  
+- Format: `joblib` files.  
+- Model numbers (1–15) correspond to predefined log combinations (see `config.py`).  
+
+### Log Combination Reference
+
+| Model # | Logs Used                     |
+|---------|-------------------------------|
+| 1       | `['RHOB']`                    |
+| 2       | `['PHIN']`                    |
+| 3       | `['VSH']`                     |
+| 4       | `['VP']`                      |
+| 5       | `['RHOB', 'PHIN']`            |
+| 6       | `['RHOB', 'VSH']`             |
+| 7       | `['RHOB', 'VP']`              |
+| 8       | `['PHIN', 'VSH']`             |
+| 9       | `['PHIN', 'VP']`              |
+| 10      | `['VSH', 'VP']`               |
+| 11      | `['RHOB', 'PHIN', 'VSH']`     |
+| 12      | `['RHOB', 'PHIN', 'VP']`      |
+| 13      | `['RHOB', 'VSH', 'VP']`       |
+| 14      | `['PHIN', 'VSH', 'VP']`       |
+| 15      | `['RHOB', 'PHIN', 'VSH', 'VP']` |
+
+---
+
+## References
+If you use this package, please cite:  
+-  https://doi.org/10.1093/gji/ggaf260
+-  
+
+---
