@@ -1,3 +1,5 @@
+# thermoprofiler/prediction.py
+
 import pandas as pd
 from . import config
 from .model_selector import (
@@ -7,6 +9,21 @@ from .model_selector import (
 )
 
 def predict_all_properties(df, model_type="XGBOOST"):
+    """
+    Predicts TC, SHC, TD for a given DataFrame.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input well log dataframe.
+    model_type : str, default="XGBOOST"
+        Model type to use ("XGBOOST", "ADABOOST", "RF", "LINEAR").
+
+    Returns
+    -------
+    df : pd.DataFrame
+        DataFrame with added predictions and uncertainty columns.
+    """
     df = df.copy()
     df["Rock_type"] = pd.to_numeric(df["Rock_type"], errors="coerce").astype("Int64")
 
@@ -18,13 +35,11 @@ def predict_all_properties(df, model_type="XGBOOST"):
             result_type="expand"
         )
         df[f"model_number_{prop}"] = results[0]
-        df[f"uncertainty_{prop}"] = results[1]   # <-- renamed from mape_*
-
-        # Step 2: Determine raw-log-reflective model numbers
+        df[f"uncertainty_{prop}"] = results[1]
         df[f"model_number_raw_{prop}"] = df.apply(model_number_from_logs, axis=1)
 
     for prop in config.OUTPUT_PROPERTIES:
-        col_opt = f"{prop}_prediction"          # <-- clearer naming
+        col_opt = f"{prop}_prediction"
         col_raw = f"{prop}_prediction_raw"
         df[col_opt] = pd.NA
         df[col_raw] = pd.NA

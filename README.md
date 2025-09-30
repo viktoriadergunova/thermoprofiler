@@ -1,9 +1,10 @@
-
-
 # ThermoProfiler
 
 ThermoProfiler is a Python package for predicting **thermal rock properties** for sedimentary rocks from well logs using machine learning models.  
-It supports multiple model types (`XGBOOST`, `ADABOOST`, `RF`, `LINEAR`)
+It supports multiple model types (`XGBOOST`, `ADABOOST`, `RF`, `LINEAR`).
+
+---
+
 ## Features
 - Predicts:
   - Thermal Conductivity (`TC`)  
@@ -13,7 +14,8 @@ It supports multiple model types (`XGBOOST`, `ADABOOST`, `RF`, `LINEAR`)
   - **MAPE-optimal** → best available log combination (lowest uncertainty).  
   - **Raw logs** → exactly matches the available logs.  
 - Provides **uncertainty estimates** (MAPE %) for each prediction.  
-
+- Supports **export to TXT and LAS files**.  
+- Includes a step-by-step **Jupyter notebook tutorial**.  
 
 ---
 
@@ -31,6 +33,7 @@ Requirements:
 - `pandas>=1.5.3`  
 - `scikit-learn==1.2.1`  
 - `joblib>=1.2.0`  
+- `lasio>=0.30.0`  
 
 ---
 
@@ -40,6 +43,7 @@ Requirements:
 import pandas as pd
 from thermoprofiler.preprocessing import clean_log_dataframe
 from thermoprofiler.prediction import predict_all_properties
+from thermoprofiler.export import export_to_txt, export_to_las
 
 # Load your well log dataset
 df = pd.read_csv("input_logs.csv")
@@ -49,6 +53,10 @@ df = clean_log_dataframe(df)
 
 # Run predictions
 results = predict_all_properties(df, model_type="XGBOOST")
+
+# Export results
+export_to_txt(results, "predictions.txt")
+export_to_las(results, "predictions.las", depth_col="Depth")
 
 print(results.head())
 ```
@@ -113,15 +121,29 @@ The returned `DataFrame` contains the following new columns for each property (`
 
 ---
 
+## Notebook Tutorial
+A complete example workflow is available in:  
+**`notebook_tutorial/predict_thermalproperties.ipynb`**  
+
+This notebook guides you through:
+1. Preparing your input logs.  
+2. Cleaning and standardizing data.  
+3. Running predictions.  
+4. Exporting results to TXT or LAS files.  
+
+---
 
 ## References
 
 If you use this package, please cite:
 
 Hosseini-Nasab, S. M., Mousavi, S. H. R., & Fuchs, S. (2025).  
-Thermal-property profiles from well-logs in sedimentary rocks: a novel machine-learning-based prediction tool trained on physically modelled synthetic data.  
-*Geophysical Journal International, 243*(1). https://doi.org/10.1093/gji/ggaf260
+*Thermal-property profiles from well-logs in sedimentary rocks: a novel machine-learning-based prediction tool trained on physically modelled synthetic data.*  
+**Geophysical Journal International, 243**(1). https://doi.org/10.1093/gji/ggaf260  
 
--  
+---
+
+## Issues
+If you encounter problems, please open an **Issue** in the GitHub repository.  
 
 ---
