@@ -2,7 +2,7 @@
 
 # ThermoProfiler
 
-ThermoProfiler is a Python package for predicting **thermal rock properties** from well logs using machine learning models.  
+ThermoProfiler is a Python package for predicting **thermal rock properties** for sedimentary rocks from well logs using machine learning models.  
 It supports multiple model types (`XGBOOST`, `ADABOOST`, `RF`, `LINEAR`)
 ## Features
 - Predicts:
@@ -113,9 +113,15 @@ The returned `DataFrame` contains the following new columns for each property (`
 
 ---
 
+
 ## References
-If you use this package, please cite:  
--  https://doi.org/10.1093/gji/ggaf260
+
+If you use this package, please cite:
+
+Hosseini-Nasab, S. M., Mousavi, S. H. R., & Fuchs, S. (2025).  
+Thermal-property profiles from well-logs in sedimentary rocks: a novel machine-learning-based prediction tool trained on physically modelled synthetic data.  
+*Geophysical Journal International, 243*(1). https://doi.org/10.1093/gji/ggaf260
+
 -  
 
 ---
