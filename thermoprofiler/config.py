@@ -67,7 +67,8 @@ BEST_MODEL_NUMBERS_BY_TYPE_AND_ROCK_TC = {
         }
     },
     "LINEAR": {
-        "EVAPORITES": {
+        "EVAPORITES": { # CHECK
+            
             11: 9.2, 15: 9.2, 14: 9.5, 8: 10.0, 5: 10.1, 12: 10.1,
             9: 10.5, 2: 10.9, 1: 20.3, 4: 18.2, 6: 18.4, 7: 18.2,
             10: 16.4, 13: 16.4, 3: 22.0
@@ -253,9 +254,10 @@ def get_model_number(log_columns):
     """Map sorted log columns to model number (1 to 15) or None if invalid."""
     sorted_columns = sorted(col.upper() for col in log_columns)
     for model_number, columns in LOG_COMBINATIONS.items():
-        if sorted_columns == columns:
+        if sorted_columns == sorted(columns):  
             return model_number
     return None
+
 
 def is_valid_rock_type(rock_type_id):
     """Check if rock_type_id is valid (1, 2, or 3)."""
