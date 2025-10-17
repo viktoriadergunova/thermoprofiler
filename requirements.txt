@@ -5,3 +5,4 @@ pandas>=1.5.3
 scikit-learn==1.2.1
 joblib>=1.2.0
 lasio>=0.30.0
+ipykernel>=6.29.0

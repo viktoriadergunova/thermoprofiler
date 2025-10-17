@@ -25,7 +25,17 @@ Clone and install dependencies:
 ```bash
 git clone https://github.com/yourusername/thermoprofiler.git
 cd thermoprofiler
+
+# create and activate Python 3.11 virtual environment
+py -3.11 -m venv .venv
+source .venv/Scripts/activate  # on Windows: .\.venv\Scripts\activate
+
+# upgrade pip + base tools
+python -m pip install --upgrade pip setuptools wheel
+
+# install dependencies
 pip install -r requirements.txt
+
 ```
 
 Requirements:
