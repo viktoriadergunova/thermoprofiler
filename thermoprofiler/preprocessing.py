@@ -18,10 +18,9 @@ def clean_log_dataframe(df):
 
     # Normalize PHIN and VSH
     if "PHIN" in df.columns and df["PHIN"].dropna().max() > 1.5:
-        df["PHIN"] = df["PHIN"] / 100.0
+        df["PHIN"] = df["PHIN"]  / 100.0
     if "VSH" in df.columns and df["VSH"].dropna().max() > 1.5:
-        df["VSH"] = df["VSH"] / 100.0
-
+        df["VSH"] = df["VSH"] 
     # Drop rows where *all* log columns are NaN
     log_cols = list(config.VALID_LOG_COLUMNS.intersection(df.columns))
     if log_cols:
